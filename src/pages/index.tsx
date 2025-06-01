@@ -58,7 +58,7 @@ export default function Home() {
       {coverLetter && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Generated Cover Letter</h2>
-          <div className="whitespace-pre-wrap border p-4 rounded bg-gray-50">
+          <div className="whitespace-pre-wrap border p-4 rounded bg-gray-50 text-black">
             {coverLetter}
           </div>
         </div>

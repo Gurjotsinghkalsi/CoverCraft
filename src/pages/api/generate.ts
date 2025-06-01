@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-002:generateContent";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -15,17 +15,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const prompt = `
-    You are a professional career advisor and resume coach.
-    Generate a personalized and professional cover letter tailored to the job description and resume below.
+You are a professional job coach and career advisor.
+Write a personalized, well-structured, and formal cover letter tailored to the job description and resume below.
 
-    Job Description:
-    ${jobDesc}
+Job Description:
+${jobDesc}
 
-    Resume:
-    ${resume}
+Resume:
+${resume}
 
-    Cover Letter:
-    `;
+Cover Letter:
+`;
 
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
@@ -39,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const data = await response.json();
+    console.log("Gemini response:", data); // optional: log for debugging
 
     const coverLetter =
       data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini API";
