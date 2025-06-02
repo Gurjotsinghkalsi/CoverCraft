@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { downloadAsDocx } from "@/utils/docExport";
 
 export default function Home() {
   const [jobDesc, setJobDesc] = useState("");
   const [resume, setResume] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const generateCoverLetter = async () => {
     setLoading(true);
@@ -49,8 +51,8 @@ export default function Home() {
 
       <button
         onClick={generateCoverLetter}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        disabled={loading}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        disabled={loading || !jobDesc.trim() || !resume.trim()}
       >
         {loading ? "Generating..." : "Generate Cover Letter"}
       </button>
@@ -58,8 +60,28 @@ export default function Home() {
       {coverLetter && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Generated Cover Letter</h2>
-          <div className="whitespace-pre-wrap border p-4 rounded bg-gray-50 text-black">
+          <div className="whitespace-pre-wrap border p-4 rounded text-black bg-gray-50 mb-4">
             {coverLetter}
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(coverLetter);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800"
+            >
+              {copied?  "Copied!" : "Copy to Clipboard"}
+            </button>
+
+            <button
+              onClick={() => downloadAsDocx(coverLetter)}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Download as Word File
+            </button>
           </div>
         </div>
       )}

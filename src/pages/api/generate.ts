@@ -15,17 +15,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const prompt = `
-You are a professional job coach and career advisor.
-Write a personalized, well-structured, and formal cover letter tailored to the job description and resume below.
+  You are a professional job coach and resume expert.
+  Write a polished, formal, and personalized cover letter tailored to the job description and resume provided.
 
-Job Description:
-${jobDesc}
+  Job Description:
+  ${jobDesc}
 
-Resume:
-${resume}
+  Resume:
+  ${resume}
 
-Cover Letter:
-`;
+  Begin the cover letter below:
+  `;
 
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
