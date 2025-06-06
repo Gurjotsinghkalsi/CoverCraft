@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { downloadAsDocx } from "@/utils/docExport";
+import { useSession, signIn, signOut } from "next-auth/react";
+
 
 export default function Home() {
   const [jobDesc, setJobDesc] = useState("");
@@ -8,6 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedTones, setSelectedTones] = useState<string[]>(["formal"]);
+  const [usageCount, setUsageCount] = useState(0);
 
   useEffect(() => {
     const savedJobDesc = localStorage.getItem("jobDesc");
@@ -24,7 +27,23 @@ export default function Home() {
     localStorage.setItem("resume", resume);
   }, [resume]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const count = parseInt(localStorage.getItem("generationCount") || "0");
+      setUsageCount(count);
+    }
+  }, []);
+
+  const MAX_GENERATIONS = 3;
+
   const generateCoverLetter = async () => {
+    const count = Number(localStorage.getItem("generationCount") || "0");
+
+    if (count >= MAX_GENERATIONS) {
+      alert("You've reached the free generation limit on this browser/device. This is a test project built for learning purposes as a student, and to keep the cost minimal, generation usage is limited.");
+      return;
+    }
+
     setLoading(true);
     setCoverLetter("");
 
@@ -45,6 +64,8 @@ export default function Home() {
       setCoverLetter(data.coverLetter || "No content returned.");
     }
 
+    localStorage.setItem("generationCount", String(count + 1)); // increment count
+    setUsageCount(count + 1);
     setLoading(false);
   };
 
@@ -74,10 +95,40 @@ export default function Home() {
       throw new Error("Unexpected response format. Not JSON.");
     }
   };
+  
+  const { data: session } = useSession();
 
   return (
+    <>
+    <div className="flex justify-end p-4">
+      {session ? (
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            Signed in as <strong>{session.user?.name || session.user?.email}</strong>
+          </span>
+          <button
+            onClick={() => signOut()}
+            className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded"
+          >
+            Sign Out
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => signIn("google")}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+        >
+          Sign in with Google
+        </button>
+      )}
+    </div>
+
     <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">AI Cover Letter Generator using GEMINI AI</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">CoverCraft</h1>
+      <h1 className="text-xl font-bold mb-6 text-center text-gray-400">AI Cover Letter Generator using GEMINI AI</h1>
+      <p className="text-md text-gray-600 mb-2">
+        Generations left: {Math.max(0, MAX_GENERATIONS - usageCount)}
+      </p>
 
       <div className="mb-4">
         <label className="font-semibold block mb-2">Job Description</label>
@@ -147,7 +198,10 @@ export default function Home() {
           setJobDesc("");
           setSelectedTones(["formal"]);
           setCoverLetter("");
-          localStorage.clear();
+          localStorage.removeItem("jobDesc");
+          localStorage.removeItem("resume");
+          localStorage.removeItem("coverLetter");
+          localStorage.removeItem("selectedTones");
         }}
         className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
       >
@@ -183,5 +237,6 @@ export default function Home() {
         </div>
       )}
     </main>
+    </>
   );
 }

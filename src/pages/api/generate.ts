@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
 import generateFromGemini from "@/lib/gemini";
+import { AuthOptions } from "next-auth";
 
 const toneDescription: Record<string, string> = {
   formal: "polished and professional",
