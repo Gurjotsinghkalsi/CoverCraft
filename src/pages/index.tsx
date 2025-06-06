@@ -104,7 +104,8 @@ export default function Home() {
 
   return (
     <>
-    <div className="flex justify-end p-4">
+    {/* Google Auth logic preserved for future use — currently UI is hidden to keep things simple for MVP. */}
+    {/* <div className="flex justify-end p-4">
       {session ? (
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-700">
@@ -125,7 +126,7 @@ export default function Home() {
           Sign in with Google
         </button>
       )}
-    </div>
+    </div> */}
 
     <main className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">CoverCraft</h1>
