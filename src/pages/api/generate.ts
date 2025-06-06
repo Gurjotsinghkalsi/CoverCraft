@@ -1,5 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const toneDescription: Record<string, string> = {
+  formal: "polished and professional",
+  friendly: "warm and conversational",
+  concise: "brief and to the point",
+  startup: "casual yet enthusiastic",
+  ats: "optimized for Applicant Tracking Systems using keywords",
+};
+
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-002:generateContent";
 
@@ -8,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Only POST requests allowed" });
   }
 
-  const { jobDesc, resume } = req.body;
+  const { jobDesc, resume, tone } = req.body;
 
   if (!jobDesc || !resume) {
     return res.status(400).json({ message: "Missing job description or resume" });
@@ -16,7 +24,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const prompt = `
   You are a professional job coach and resume expert.
-  Write a polished, formal, and personalized cover letter tailored to the job description and resume provided.
+
+  Write a ${toneDescription[tone]} cover letter tailored specifically to the job description and resume below.
+
+  Ensure it is personalized, coherent, and well-structured — highlighting relevant experience and enthusiasm for the role.
 
   Job Description:
   ${jobDesc}
