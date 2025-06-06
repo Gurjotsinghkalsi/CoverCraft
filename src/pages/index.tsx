@@ -126,7 +126,7 @@ export default function Home() {
     <main className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">CoverCraft</h1>
       <h1 className="text-xl font-bold mb-6 text-center text-gray-400">AI Cover Letter Generator using GEMINI AI</h1>
-      <p className="text-md text-gray-600 mb-2">
+      <p className="text-md text-white mb-2">
         Generations left: {Math.max(0, MAX_GENERATIONS - usageCount)}
       </p>
 
@@ -165,7 +165,7 @@ export default function Home() {
       <div className="mb-4">
         <label className="block font-medium mb-2">Choose Tone(s):</label>
         <div className="grid grid-cols-2 gap-2">
-          {["formal", "friendly", "concise", "startup", "ats"].map((tone) => (
+          {["formal", "friendly", "concise", "startup", "ATS"].map((tone) => (
             <label key={tone} className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -177,6 +177,7 @@ export default function Home() {
                       : [...prev, tone]
                   )
                 }
+                className="cursor-pointer"
               />
               {tone.charAt(0).toUpperCase() + tone.slice(1)}
             </label>
@@ -186,7 +187,7 @@ export default function Home() {
 
       <button
         onClick={generateCoverLetter}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 cursor-pointer"
         disabled={loading || !jobDesc.trim() || !resume.trim() || selectedTones.length === 0}
       >
         {loading ? "Generating..." : "Generate Cover Letter"}
@@ -203,7 +204,7 @@ export default function Home() {
           localStorage.removeItem("coverLetter");
           localStorage.removeItem("selectedTones");
         }}
-        className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 cursor-pointer"
       >
         Reset All Fields
       </button>
