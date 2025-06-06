@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { downloadAsDocx } from "@/utils/docExport";
 import { useSession, signIn, signOut } from "next-auth/react";
 
+type CoverLetterItem = {
+  tone: string;
+  content: string;
+};
 
 export default function Home() {
   const [jobDesc, setJobDesc] = useState("");
@@ -56,8 +60,8 @@ export default function Home() {
     const data = await response.json();
 
     if (data.coverLetters && Array.isArray(data.coverLetters)) {
-      const combinedLetters = data.coverLetters
-        .map((c: any) => `--- ${c.tone.toUpperCase()} ---\n${c.content}`)
+      const combinedLetters = (data.coverLetters as CoverLetterItem[])
+        .map((c) => `--- ${c.tone.toUpperCase()} ---\n${c.content}`)
         .join("\n\n");
       setCoverLetter(combinedLetters);
     } else {
