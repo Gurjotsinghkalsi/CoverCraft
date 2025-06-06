@@ -7,16 +7,7 @@ export default function Home() {
   const [coverLetter, setCoverLetter] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [tone, setTone] = useState('formal');
-
-  const toneOptions = ['Formal', 'Friendly', 'Confident', 'Persuasive', 'Enthusiastic'];
-  const [selectedTones, setSelectedTones] = useState<string[]>([]);
-
-  const handleToneToggle = (tone: string) => {
-    setSelectedTones(prev =>
-      prev.includes(tone) ? prev.filter(t => t !== tone) : [...prev, tone]
-    );
-  };
+  const [selectedTones, setSelectedTones] = useState<string[]>(["formal"]);
 
   useEffect(() => {
     const savedJobDesc = localStorage.getItem("jobDesc");
@@ -24,11 +15,11 @@ export default function Home() {
     if (savedJobDesc) setJobDesc(savedJobDesc);
     if (savedResume) setResume(savedResume);
   }, []);
-  
+
   useEffect(() => {
     localStorage.setItem("jobDesc", jobDesc);
   }, [jobDesc]);
-  
+
   useEffect(() => {
     localStorage.setItem("resume", resume);
   }, [resume]);
@@ -40,36 +31,45 @@ export default function Home() {
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobDesc, resume, tone }),
+      body: JSON.stringify({ jobDesc, resume, selectedTones }),
     });
 
     const data = await response.json();
-    setCoverLetter(data.coverLetter);
+
+    if (data.coverLetters && Array.isArray(data.coverLetters)) {
+      const combinedLetters = data.coverLetters
+        .map((c: any) => `--- ${c.tone.toUpperCase()} ---\n${c.content}`)
+        .join("\n\n");
+      setCoverLetter(combinedLetters);
+    } else {
+      setCoverLetter(data.coverLetter || "No content returned.");
+    }
+
     setLoading(false);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     const formData = new FormData();
     formData.append("resume", file);
-  
+
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
-  
+
     if (!res.ok) {
-      const errText = await res.text(); // helpful for debugging
+      const errText = await res.text();
       throw new Error(`Upload failed: ${errText}`);
     }
-    
+
     const contentType = res.headers.get("content-type");
-    
+
     if (contentType && contentType.includes("application/json")) {
       const data = await res.json();
-      setResume(data.text); // parsed PDF content
+      setResume(data.text);
     } else {
       throw new Error("Unexpected response format. Not JSON.");
     }
@@ -110,24 +110,33 @@ export default function Home() {
           placeholder="Paste your resume content here..."
         />
       </div>
-      
-      <label className="block font-medium mb-1">Choose Tone:</label>
-      <select
-        value={tone}
-        onChange={(e) => setTone(e.target.value)}
-        className="border p-2 mb-4 rounded w-full"
-      >
-        <option value="formal">Formal</option>
-        <option value="friendly">Friendly</option>
-        <option value="concise">Concise</option>
-        <option value="startup">Startup-Friendly</option>
-        <option value="ats">ATS-Optimized</option>
-      </select>
+
+      <div className="mb-4">
+        <label className="block font-medium mb-2">Choose Tone(s):</label>
+        <div className="grid grid-cols-2 gap-2">
+          {["formal", "friendly", "concise", "startup", "ats"].map((tone) => (
+            <label key={tone} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedTones.includes(tone)}
+                onChange={() =>
+                  setSelectedTones((prev) =>
+                    prev.includes(tone)
+                      ? prev.filter((t) => t !== tone)
+                      : [...prev, tone]
+                  )
+                }
+              />
+              {tone.charAt(0).toUpperCase() + tone.slice(1)}
+            </label>
+          ))}
+        </div>
+      </div>
 
       <button
         onClick={generateCoverLetter}
         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-        disabled={loading || !jobDesc.trim() || !resume.trim()}
+        disabled={loading || !jobDesc.trim() || !resume.trim() || selectedTones.length === 0}
       >
         {loading ? "Generating..." : "Generate Cover Letter"}
       </button>
@@ -136,7 +145,7 @@ export default function Home() {
         onClick={() => {
           setResume("");
           setJobDesc("");
-          setTone("formal");
+          setSelectedTones(["formal"]);
           setCoverLetter("");
           localStorage.clear();
         }}
@@ -161,7 +170,7 @@ export default function Home() {
               }}
               className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800"
             >
-              {copied?  "Copied!" : "Copy to Clipboard"}
+              {copied ? "Copied!" : "Copy to Clipboard"}
             </button>
 
             <button

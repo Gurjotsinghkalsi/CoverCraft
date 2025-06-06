@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import generateFromGemini from "@/lib/gemini";
 
 const toneDescription: Record<string, string> = {
   formal: "polished and professional",
@@ -8,56 +9,41 @@ const toneDescription: Record<string, string> = {
   ats: "optimized for Applicant Tracking Systems using keywords",
 };
 
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-002:generateContent";
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Only POST requests allowed" });
   }
 
-  const { jobDesc, resume, tone } = req.body;
+  const { jobDesc, resume, selectedTones } = req.body;
 
-  if (!jobDesc || !resume) {
-    return res.status(400).json({ message: "Missing job description or resume" });
+  if (!jobDesc || !resume || !selectedTones || !Array.isArray(selectedTones)) {
+    return res.status(400).json({ message: "Missing job description, resume, or tones" });
   }
 
-  const prompt = `
-  You are a professional job coach and resume expert.
-
-  Write a ${toneDescription[tone]} cover letter tailored specifically to the job description and resume below.
-
-  Ensure it is personalized, coherent, and well-structured — highlighting relevant experience and enthusiasm for the role.
-
-  Job Description:
-  ${jobDesc}
-
-  Resume:
-  ${resume}
-
-  Begin the cover letter below:
-  `;
-
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
+    const responses = await Promise.all(
+      selectedTones.map(async (tone: string) => {
+        const prompt = `
+          You are a professional job coach and resume expert.
+          Write a ${toneDescription[tone] || tone} and personalized cover letter tailored to the job description and resume provided.
 
-    const data = await response.json();
-    console.log("Gemini response:", data); // optional: log for debugging
+          Job Description:
+          ${jobDesc}
 
-    const coverLetter =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini API";
+          Resume:
+          ${resume}
 
-    return res.status(200).json({ coverLetter });
+          Begin the cover letter below:
+        `;
+
+        const result = await generateFromGemini(prompt);
+        return { tone, content: result };
+      })
+    );
+
+    return res.status(200).json({ coverLetters: responses });
   } catch (error) {
-    console.error("Gemini error:", error);
-    return res.status(500).json({ message: "Failed to generate cover letter" });
+    console.error("Gemini generation error:", error);
+    return res.status(500).json({ message: "Failed to generate cover letters" });
   }
 }
