@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { downloadAsDocx } from "@/utils/docExport";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 type CoverLetterItem = {
   tone: string;
